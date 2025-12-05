@@ -11,11 +11,16 @@ const app = express();
 // FIX CORS for Netlify
 app.use(
   cors({
-    origin: "https://chaitanyadeemedcollege.netlify.app",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    origin: [
+      "https://chaitanyadeemedcollege.netlify.app",
+      "http://localhost:3000"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
   })
 );
+
 
 // Parse JSON body
 app.use(express.json());
