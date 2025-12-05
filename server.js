@@ -7,7 +7,17 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// FIX CORS for Netlify
+app.use(
+  cors({
+    origin: "https://chaitanyadeemedcollege.netlify.app",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+// Parse JSON body
 app.use(express.json());
 
 // Connect to DB
