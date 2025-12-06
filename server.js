@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
+import candidateRoutes from "./routes/candidateRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +32,10 @@ connectDB();
 
 // Routes
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/candidates", candidateRoutes);
+app.use("/api/auth", authRoutes);
+
+
 
 // Start Server
 app.listen(process.env.PORT, () =>
