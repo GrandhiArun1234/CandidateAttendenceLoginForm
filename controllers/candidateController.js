@@ -1,46 +1,144 @@
 import Candidate from "../models/Candidate.js";
-import bcrypt from "bcryptjs";
 
-export const loginUser = async (req, res) => {
+console.log("🔥 candidateController.js Loaded");
+
+// ================================
+// ADD NEW CANDIDATE
+// ================================
+export const addCandidate = async (req, res) => {
+  console.log("📥 Incoming Body:", req.body);
+
   try {
-    const { idOrPhone, password } = req.body;
+    const { candidateId, name, phone, password, project } = req.body;
 
-    // Admin Login
-    if (idOrPhone === "admin" && password === "admin789") {
-      return res.status(200).json({
-        message: "Admin login successful",
-        type: "admin",
-        name: "Admin",
-        id: "admin",
-      });
+    console.log("🔍 Checking required fields...");
+
+    if (!candidateId || !name || !phone || !password || !project) {
+      console.log("❌ Missing field detected");
+      return res.status(400).json({ message: "All fields required" });
     }
 
-    // Candidate login using ID or Phone
+    console.log("🔎 Checking duplicates for:", { candidateId, phone });
+
+    const exists = await Candidate.findOne({
+      $or: [{ phone }, { candidateId }],
+    });
+
+    console.log("🟡 Duplicate Result:", exists);
+
+    if (exists) {
+      console.log("❌ Duplicate candidate found");
+      return res.status(400).json({ message: "Candidate already exists" });
+    }
+
+    console.log("🟢 Creating new candidate...");
+
+    const candidate = await Candidate.create({
+      candidateId,
+      name,
+      phone,
+      password,
+      project,
+    });
+
+    console.log("✅ Candidate Created:", candidate);
+
+    res.status(201).json({ message: "Candidate added", candidate });
+  } catch (error) {
+    console.error("🔥 ADD CANDIDATE ERROR:", error.message);
+
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+// ================================
+// GET ALL CANDIDATES
+// ================================
+export const getCandidates = async (req, res) => {
+  console.log("📥 Fetching all candidates...");
+
+  try {
+    const candidates = await Candidate.find().sort({ createdAt: -1 });
+
+    console.log("📤 Candidates sent:", candidates.length);
+
+    res.status(200).json(candidates);
+  } catch (error) {
+    console.error("🔥 GET CANDIDATES ERROR:", error.message);
+
+    res.status(500).json({
+      message: "Error fetching candidates",
+      error: error.message,
+    });
+  }
+};
+
+// ================================
+// UPDATE CANDIDATE
+// ================================
+export const updateCandidate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, password, project } = req.body;
+
+    const candidate = await Candidate.findById(id);
+
+    if (!candidate) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    // Update fields
+    if (name) candidate.name = name;
+    if (phone) candidate.phone = phone;
+    if (project) candidate.project = project;
+
+    // If password changed, re-hash
+    if (password) candidate.password = password; // pre-save hook will hash it
+
+    await candidate.save();
+
+    res.json({ message: "Candidate updated successfully" });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error updating candidate", error });
+  }
+};
+
+
+
+export const deleteCandidate = async (req, res) => {
+  try {
+    const candidateId = req.params.id;
+
+    const deleted = await Candidate.findByIdAndDelete(candidateId);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Candidate not found" });
+    }
+
+    res.status(200).json({ message: "Candidate deleted successfully" });
+
+  } catch (error) {
+    console.error("🔥 DELETE CANDIDATE ERROR:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getSingleCandidate = async (req, res) => {
+  try {
     const candidate = await Candidate.findOne({
-      $or: [{ candidateId: idOrPhone }, { phone: idOrPhone }],
+      candidateId: req.params.candidateId,
     });
 
     if (!candidate) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(404).json({ message: "Candidate not found" });
     }
 
-    // Password check
-    const valid = await bcrypt.compare(password, candidate.password);
-
-    if (!valid) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
-
-    return res.status(200).json({
-      message: "Login Successful",
-      type: "candidate",
-      name: candidate.name,
-      id: candidate.candidateId,
-    });
-
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json(candidate);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
 };
- 
