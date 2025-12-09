@@ -58,3 +58,21 @@ export const getAllAttendance = async (req, res) => {
     });
   }
 };
+// =============================
+// CHECK IF ATTENDANCE EXISTS (NEW)
+// =============================
+export const checkAttendance = async (req, res) => {
+  try {
+    const { candidateId, date } = req.params;
+
+    const exists = await Attendance.findOne({ candidateId, date });
+
+    return res.status(200).json({ exists: !!exists });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error,
+    });
+  }
+};
