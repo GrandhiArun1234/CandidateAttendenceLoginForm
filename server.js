@@ -14,7 +14,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://nizam-college-abids.netlify.app",
+      "https://chaitanyadeemedcollege.netlify.app",
       "http://localhost:3000"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
