@@ -14,7 +14,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://chaitanyadeemedcollege.netlify.app",
+      "https://mark-attendance.netlify.app",
       "http://localhost:3000"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
