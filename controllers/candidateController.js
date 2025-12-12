@@ -130,7 +130,7 @@ export const updateCandidate = async (req, res) => {
       account,
     } = req.body;
 
-    // FORMAT VALIDATION
+    // VALIDATION ONLY IF FIELD PROVIDED
     if (phone && !/^\d{10}$/.test(phone))
       return res.status(400).json({ message: "Phone must be 10 digits" });
 
@@ -146,31 +146,47 @@ export const updateCandidate = async (req, res) => {
     if (account && account.length < 8)
       return res.status(400).json({ message: "Account must be at least 8 digits" });
 
-    // 🔥 DUPLICATE CHECK ON UPDATE (EXCLUDE SELF)
-    const duplicate = await Candidate.findOne({
-      _id: { $ne: id },
-      $or: [
-        { phone },
-        { aadhar },
-        { pan },
-        { account },
-      ],
-    });
+    // 🔥 DUPLICATE CHECK (BUT ONLY FOR PROVIDED FIELDS)
+    const duplicateConditions = [];
 
-    if (duplicate) {
-      return res
-        .status(400)
-        .json({ message: "Duplicate data already exists for another candidate" });
+    if (phone) duplicateConditions.push({ phone });
+    if (aadhar) duplicateConditions.push({ aadhar });
+    if (pan) duplicateConditions.push({ pan });
+    if (account) duplicateConditions.push({ account });
+
+    if (duplicateConditions.length > 0) {
+      const duplicate = await Candidate.findOne({
+        _id: { $ne: id },
+        $or: duplicateConditions,
+      });
+
+      if (duplicate) {
+        return res.status(400).json({
+          message: "Duplicate data exists for another candidate",
+        });
+      }
     }
 
-    // UPDATE FIELDS
-    Object.assign(candidate, req.body);
+    // APPLY UPDATES
+    if (name) candidate.name = name;
+    if (phone) candidate.phone = phone;
+    if (project) candidate.project = project;
+    if (college) candidate.college = college;
+    if (location) candidate.location = location;
+    if (aadhar) candidate.aadhar = aadhar;
+    if (pan) candidate.pan = pan;
+    if (ifsc) candidate.ifsc = ifsc;
+    if (branch) candidate.branch = branch;
+    if (account) candidate.account = account;
+
+    // Password change
+    if (password) candidate.password = password;
 
     await candidate.save();
 
-    res.json({ message: "Candidate updated successfully" });
+    return res.json({ message: "Candidate updated successfully" });
   } catch (error) {
-    console.error("UPDATE ERROR:", error.message);
+    console.error("UPDATE ERROR:", error);
 
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue)[0];
