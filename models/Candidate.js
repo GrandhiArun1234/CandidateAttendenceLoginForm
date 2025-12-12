@@ -63,6 +63,7 @@ const candidateSchema = new mongoose.Schema(
       uppercase: true,
       minlength: 11,
       maxlength: 11,
+      // ❌ DO NOT MAKE UNIQUE
     },
 
     branch: {
@@ -74,6 +75,7 @@ const candidateSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
+      unique: true,   // ✅ Add this so duplicate accounts are not allowed
     },
   },
   { timestamps: true }
